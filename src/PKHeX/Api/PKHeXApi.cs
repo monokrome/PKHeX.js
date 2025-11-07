@@ -617,12 +617,11 @@ public partial class PKHeXApi
                     errorList.Add(localizer.Humanize(r));
             }
 
-            return new
-            {
-                valid = analysis.Valid,
-                errors = errorList.ToArray(),
-                parsed = analysis.Report()
-            };
+            return new LegalityResult(
+                analysis.Valid,
+                errorList.ToArray(),
+                analysis.Report()
+            );
         });
     }
 
@@ -838,15 +837,14 @@ public partial class PKHeXApi
             if (pk is not IContestStatsReadOnly contestStats)
                 throw new ValidationException("This Pokemon does not support contest stats", "NO_CONTEST_STATS");
 
-            return new
-            {
-                cool = contestStats.ContestCool,
-                beauty = contestStats.ContestBeauty,
-                cute = contestStats.ContestCute,
-                smart = contestStats.ContestSmart,
-                tough = contestStats.ContestTough,
-                sheen = contestStats.ContestSheen
-            };
+            return new ContestStats(
+                contestStats.ContestCool,
+                contestStats.ContestBeauty,
+                contestStats.ContestCute,
+                contestStats.ContestSmart,
+                contestStats.ContestTough,
+                contestStats.ContestSheen
+            );
         });
     }
 
@@ -957,15 +955,14 @@ public partial class PKHeXApi
             string? startDate = null;
             int fame = 0;
 
-            return new
-            {
-                ot = save.OT,
-                tid = save.DisplayTID,
-                sid = save.DisplaySID,
-                money = save.Money,
+            return new TrainerCard(
+                save.OT,
+                save.DisplayTID,
+                save.DisplaySID,
+                save.Money,
                 startDate,
                 fame
-            };
+            );
         });
     }
 
@@ -979,8 +976,7 @@ public partial class PKHeXApi
 
             int skin = 0, hair = 0, top = 0, bottom = 0, shoes = 0, accessory = 0, bag = 0, hat = 0;
 
-            return new
-            {
+            return new TrainerAppearance(
                 skin,
                 hair,
                 top,
@@ -989,7 +985,7 @@ public partial class PKHeXApi
                 accessory,
                 bag,
                 hat
-            };
+            );
         });
     }
 
@@ -1331,8 +1327,7 @@ public partial class PKHeXApi
                 throw new ValidationException("Daycare not supported for this save file generation", "UNSUPPORTED_GENERATION");
             }
 
-            return new
-            {
+            return new DaycareData(
                 slot1Species,
                 slot1SpeciesName,
                 slot1Level,
@@ -1340,7 +1335,7 @@ public partial class PKHeXApi
                 slot2SpeciesName,
                 slot2Level,
                 hasEgg
-            };
+            );
         });
     }
 
@@ -1615,11 +1610,10 @@ public partial class PKHeXApi
                 throw new ValidationException("Badges not supported for this save file generation", "UNSUPPORTED_GENERATION");
             }
 
-            return new
-            {
+            return new BadgeData(
                 badgeCount,
-                badges = badgeList.ToArray()
-            };
+                badgeList.ToArray()
+            );
         });
     }
 
@@ -3358,12 +3352,11 @@ public partial class PKHeXApi
                     errorList.Add(localizer.Humanize(r));
             }
 
-            return new
-            {
-                valid = analysis.Valid,
-                errors = errorList.ToArray(),
-                parsed = analysis.Report()
-            };
+            return new LegalityResult(
+                analysis.Valid,
+                errorList.ToArray(),
+                analysis.Report()
+            );
         });
     }
 
@@ -3583,15 +3576,14 @@ public partial class PKHeXApi
                 throw new ValidationException("Unable to parse Pokemon data", "INVALID_PKM_DATA");
 
 
-            return new
-            {
-                hp = pk.Stat_HPMax,
-                attack = pk.Stat_ATK,
-                defense = pk.Stat_DEF,
-                spAttack = pk.Stat_SPA,
-                spDefense = pk.Stat_SPD,
-                speed = pk.Stat_SPE
-            };
+            return new PokemonStats(
+                pk.Stat_HPMax,
+                pk.Stat_ATK,
+                pk.Stat_DEF,
+                pk.Stat_SPA,
+                pk.Stat_SPD,
+                pk.Stat_SPE
+            );
         });
     }
 
@@ -3743,12 +3735,11 @@ public partial class PKHeXApi
             var hpType = pk.HPType;
             var hpPower = pk.HPPower;
 
-            return new
-            {
-                type = (int)hpType,
-                typeName = GameInfo.Strings.Types[(int)hpType],
-                power = hpPower
-            };
+            return new HiddenPowerInfo(
+                (int)hpType,
+                GameInfo.Strings.Types[(int)hpType],
+                hpPower
+            );
         });
     }
 
@@ -3779,11 +3770,10 @@ public partial class PKHeXApi
             var characteristics = GameInfo.Strings.characteristics;
             var characteristicText = characteristic < characteristics.Length ? characteristics[characteristic] : "";
 
-            return new
-            {
-                index = characteristic,
-                text = characteristicText
-            };
+            return new CharacteristicInfo(
+                characteristic,
+                characteristicText
+            );
         });
     }
 
@@ -3818,60 +3808,56 @@ public partial class PKHeXApi
 
 
             var chain = evolutions.GetEvolutionsAndPreEvolutions((ushort)species, 0);
-            var evolutionChain = new List<object>();
+            var evolutionChain = new List<EvolutionEntry>();
 
             foreach (var (evoSpecies, evoForm) in chain)
             {
-                evolutionChain.Add(new
-                {
-                    species = evoSpecies,
-                    speciesName = GameInfo.Strings.Species[evoSpecies],
-                    form = evoForm
-                });
+                evolutionChain.Add(new EvolutionEntry(
+                    evoSpecies,
+                    GameInfo.Strings.Species[evoSpecies],
+                    evoForm
+                ));
             }
 
 
-            var forwardEvolutions = new List<object>();
+            var forwardEvolutions = new List<EvolutionEntry>();
             var forward = evolutions.Forward.GetEvolutions((ushort)species, 0);
             foreach (var (evoSpecies, evoForm) in forward)
             {
-                forwardEvolutions.Add(new
-                {
-                    species = evoSpecies,
-                    speciesName = GameInfo.Strings.Species[evoSpecies],
-                    form = evoForm
-                });
+                forwardEvolutions.Add(new EvolutionEntry(
+                    evoSpecies,
+                    GameInfo.Strings.Species[evoSpecies],
+                    evoForm
+                ));
             }
 
 
-            var preEvolutions = new List<object>();
+            var preEvolutions = new List<EvolutionEntry>();
             var reverse = evolutions.Reverse.GetPreEvolutions((ushort)species, 0);
             foreach (var (evoSpecies, evoForm) in reverse)
             {
-                preEvolutions.Add(new
-                {
-                    species = evoSpecies,
-                    speciesName = GameInfo.Strings.Species[evoSpecies],
-                    form = evoForm
-                });
+                preEvolutions.Add(new EvolutionEntry(
+                    evoSpecies,
+                    GameInfo.Strings.Species[evoSpecies],
+                    evoForm
+                ));
             }
 
 
             var baseSpeciesForm = evolutions.GetBaseSpeciesForm((ushort)species, 0);
 
-            return new
-            {
+            return new EvolutionInfo(
                 species,
-                speciesName = GameInfo.Strings.Species[species],
+                GameInfo.Strings.Species[species],
                 generation,
                 evolutionChain,
-                chainLength = evolutionChain.Count,
+                evolutionChain.Count,
                 forwardEvolutions,
                 preEvolutions,
-                baseSpecies = baseSpeciesForm.Species,
-                baseSpeciesName = GameInfo.Strings.Species[baseSpeciesForm.Species],
-                baseForm = baseSpeciesForm.Form
-            };
+                baseSpeciesForm.Species,
+                GameInfo.Strings.Species[baseSpeciesForm.Species],
+                baseSpeciesForm.Form
+            );
         });
     }
 
@@ -3905,7 +3891,7 @@ public partial class PKHeXApi
                 _ => throw new ValidationException($"Invalid generation {generation}", "INVALID_GENERATION")
             };
 
-            var forms = new List<object>();
+            var forms = new List<SpeciesFormInfo>();
 
 
             var pi = pt.GetFormEntry((ushort)species, 0);
@@ -3915,37 +3901,34 @@ public partial class PKHeXApi
             {
                 var formEntry = pt.GetFormEntry((ushort)species, i);
 
-                forms.Add(new
-                {
-                    formIndex = i,
-                    formName = $"Form {i}",
-                    type1 = formEntry.Type1,
-                    type1Name = GameInfo.Strings.Types[formEntry.Type1],
-                    type2 = formEntry.Type2,
-                    type2Name = GameInfo.Strings.Types[formEntry.Type2],
-                    baseStats = new
-                    {
-                        hp = formEntry.HP,
-                        attack = formEntry.ATK,
-                        defense = formEntry.DEF,
-                        spAttack = formEntry.SPA,
-                        spDefense = formEntry.SPD,
-                        speed = formEntry.SPE
-                    },
-                    genderRatio = formEntry.Gender,
-                    isDualGender = formEntry.IsDualGender,
-                    isGenderless = formEntry.Genderless
-                });
+                forms.Add(new SpeciesFormInfo(
+                    i,
+                    $"Form {i}",
+                    formEntry.Type1,
+                    GameInfo.Strings.Types[formEntry.Type1],
+                    formEntry.Type2,
+                    GameInfo.Strings.Types[formEntry.Type2],
+                    new PokemonStats(
+                        formEntry.HP,
+                        formEntry.ATK,
+                        formEntry.DEF,
+                        formEntry.SPA,
+                        formEntry.SPD,
+                        formEntry.SPE
+                    ),
+                    formEntry.Gender,
+                    formEntry.IsDualGender,
+                    formEntry.Genderless
+                ));
             }
 
-            return new
-            {
+            return new SpeciesFormsInfo(
                 species,
-                speciesName = GameInfo.Strings.Species[species],
+                GameInfo.Strings.Species[species],
                 generation,
                 forms,
                 formCount
-            };
+            );
         });
     }
 
@@ -4018,16 +4001,15 @@ public partial class PKHeXApi
             var convertedData = converted.DecryptedPartyData;
             var base64Result = Convert.ToBase64String(convertedData);
 
-            return new
-            {
-                success = true,
-                base64Data = base64Result,
+            return new ConversionResult(
+                true,
+                base64Result,
                 fromGeneration,
                 toGeneration,
-                fromFormat = pk.GetType().Name,
-                toFormat = converted.GetType().Name,
-                conversionResult = result.ToString()
-            };
+                pk.GetType().Name,
+                converted.GetType().Name,
+                result.ToString()
+            );
         });
     }
 
@@ -4044,24 +4026,22 @@ public partial class PKHeXApi
             var version = (GameVersion)gameVersion;
             var locations = GameInfo.GetLocationList(version, context, eggLocations);
 
-            var locationList = new List<object>();
+            var locationList = new List<LocationInfo>();
             foreach (var loc in locations)
             {
-                locationList.Add(new
-                {
-                    value = loc.Value,
-                    text = loc.Text
-                });
+                locationList.Add(new LocationInfo(
+                    loc.Value,
+                    loc.Text
+                ));
             }
 
-            return new
-            {
+            return new MetLocationsInfo(
                 generation,
                 gameVersion,
-                isEggLocations = eggLocations,
-                locations = locationList,
-                count = locationList.Count
-            };
+                eggLocations,
+                locationList,
+                locationList.Count
+            );
         });
     }
 }
