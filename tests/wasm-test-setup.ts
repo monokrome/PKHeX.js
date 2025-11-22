@@ -102,12 +102,16 @@ export function getWASM(): WASMTestContext {
  * Create a test save file for integration tests
  */
 export function createTestSave(rawApi: any): number {
-  // Create a minimal valid save file (Gen 3 Emerald format)
-  // This is a placeholder - you'd need actual save data
-  const testSaveData = Buffer.alloc(131072).toString('base64'); // 128KB save
+  const fs = require('fs');
+  const path = require('path');
+  
+  const testSavePath = path.join(__dirname, 'PKHeX.Tests', 'TestData', 'emerald.sav');
   
   try {
-    const result = JSON.parse(rawApi.LoadSave(testSaveData));
+    const saveData = fs.readFileSync(testSavePath);
+    const base64Data = saveData.toString('base64');
+    
+    const result = JSON.parse(rawApi.LoadSave(base64Data));
     if (result.success) {
       return result.handle;
     }

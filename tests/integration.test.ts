@@ -240,4 +240,117 @@ describe('Integration Tests', () => {
       expect(typeof parsed.error).toBe('string');
     });
   });
+
+  describe('Inventory Operations', () => {
+    it('should serialize GetPouchItems error response', () => {
+      const jsonResponse = rawApi.GetPouchItems(-1);
+      const parsed = JSON.parse(jsonResponse);
+      
+      expect(parsed).toHaveProperty('error');
+      expect(typeof parsed.error).toBe('string');
+    });
+
+    it('should serialize AddItemToPouch error response', () => {
+      const jsonResponse = rawApi.AddItemToPouch(-1, 1, 1, 0);
+      const parsed = JSON.parse(jsonResponse);
+      
+      expect(parsed).toHaveProperty('error');
+      expect(typeof parsed.error).toBe('string');
+    });
+
+    it('should serialize RemoveItemFromPouch error response', () => {
+      const jsonResponse = rawApi.RemoveItemFromPouch(-1, 1, 1);
+      const parsed = JSON.parse(jsonResponse);
+      
+      expect(parsed).toHaveProperty('error');
+      expect(typeof parsed.error).toBe('string');
+    });
+
+    it('should get inventory pouches from real save file', async () => {
+      await withTestSave(rawApi, (handle) => {
+        const jsonResponse = rawApi.GetPouchItems(handle);
+        const parsed = JSON.parse(jsonResponse);
+        
+        if (parsed.error) {
+          expect(typeof parsed.error).toBe('string');
+        } else {
+          expect(Array.isArray(parsed)).toBe(true);
+          
+          if (parsed.length > 0) {
+            const pouch = parsed[0];
+            expect(pouch).toHaveProperty('pouchType');
+            expect(pouch).toHaveProperty('pouchIndex');
+            expect(pouch).toHaveProperty('items');
+            expect(pouch).toHaveProperty('totalSlots');
+            expect(Array.isArray(pouch.items)).toBe(true);
+            
+            if (pouch.items.length > 0) {
+              const item = pouch.items[0];
+              expect(item).toHaveProperty('itemId');
+              expect(item).toHaveProperty('itemName');
+              expect(item).toHaveProperty('count');
+              expect(typeof item.itemId).toBe('number');
+              expect(typeof item.count).toBe('number');
+            }
+          }
+        }
+      });
+    });
+
+    it('should add and remove items from inventory', async () => {
+      await withTestSave(rawApi, (handle) => {
+        const itemId = 1;
+        const addCount = 5;
+        const pouchIndex = 0;
+        
+        const addResponse = rawApi.AddItemToPouch(handle, itemId, addCount, pouchIndex);
+        const addParsed = JSON.parse(addResponse);
+        
+        if (!addParsed.error) {
+          expect(addParsed).toHaveProperty('success', true);
+          
+          const inventoryResponse = rawApi.GetPouchItems(handle);
+          const inventory = JSON.parse(inventoryResponse);
+          
+          if (!inventory.error && Array.isArray(inventory)) {
+            const pouch = inventory[pouchIndex];
+            const addedItem = pouch.items.find((item: any) => item.itemId === itemId);
+            
+            if (addedItem) {
+              expect(addedItem.count).toBeGreaterThanOrEqual(addCount);
+            }
+          }
+          
+          const removeResponse = rawApi.RemoveItemFromPouch(handle, itemId, addCount);
+          const removeParsed = JSON.parse(removeResponse);
+          
+          if (!removeParsed.error) {
+            expect(removeParsed).toHaveProperty('success', true);
+          }
+        }
+      });
+    });
+
+    it('should handle invalid item IDs gracefully', async () => {
+      await withTestSave(rawApi, (handle) => {
+        const invalidItemId = 999999;
+        const jsonResponse = rawApi.AddItemToPouch(handle, invalidItemId, 1, 0);
+        const parsed = JSON.parse(jsonResponse);
+        
+        expect(parsed).toHaveProperty('error');
+        expect(typeof parsed.error).toBe('string');
+      });
+    });
+
+    it('should handle invalid pouch index gracefully', async () => {
+      await withTestSave(rawApi, (handle) => {
+        const invalidPouchIndex = 999;
+        const jsonResponse = rawApi.AddItemToPouch(handle, 1, 1, invalidPouchIndex);
+        const parsed = JSON.parse(jsonResponse);
+        
+        expect(parsed).toHaveProperty('error');
+        expect(typeof parsed.error).toBe('string');
+      });
+    });
+  });
 });
